@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "tsc": "tsc",
     "deploy-commands": "node --loader ts-node/esm services/commands/deployCommands.ts",
-    "start": "node --loader ts-node/esm index.ts"
+    "start": "node index.ts",
+    "dev": "node --loader ts-node/esm index.ts"
   },
   "repository": {
     "type": "git",
