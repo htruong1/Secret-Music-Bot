@@ -28,6 +28,12 @@ export class MusicPlayer implements IMusicPlayer {
       metadata: {
         channel: message.channel,
       },
+      ytdlOptions: {
+        quality: "highest",
+        filter: "audioonly",
+        highWaterMark: 1 << 25,
+        dlChunkSize: 0,
+      },
     });
 
     this.initListenerEvents();
@@ -40,6 +46,12 @@ export class MusicPlayer implements IMusicPlayer {
         this.playerQueue = this.player.createQueue(this.message.guild, {
           metadata: {
             channel: this.message.channel,
+          },
+          ytdlOptions: {
+            quality: "highest",
+            filter: "audioonly",
+            highWaterMark: 1 << 25,
+            dlChunkSize: 0,
           },
         });
       }
