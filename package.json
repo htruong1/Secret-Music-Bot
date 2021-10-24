@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "tsc": "tsc",
     "deploy-commands": "node --loader ts-node/esm services/commands/deployCommands.ts",
-    "start": "node --loader ts-node/esm index.ts",
+    "start": "node dist/index.js",
     "heroku-prebuild": "npm install -g ts-node",
     "dev": "node --loader ts-node/esm index.ts"
   },
