@@ -8,6 +8,7 @@
     "tsc": "tsc",
     "deploy-commands": "node --loader ts-node/esm services/commands/deployCommands.ts",
     "start": "node --loader ts-node/esm index.ts",
+    "heroku-prebuild": "npm install -g ts-node",
     "dev": "node --loader ts-node/esm index.ts"
   },
   "repository": {
