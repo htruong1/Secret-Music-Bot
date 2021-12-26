@@ -11,6 +11,9 @@
     "heroku-prebuild": "npm install -g ts-node",
     "dev": "node --loader ts-node/esm index.ts"
   },
+  "keywords": [
+    "heroku"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/htruong55/Secret-Music-Bot.git"
