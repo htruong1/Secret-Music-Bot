@@ -14,6 +14,7 @@ const discord_js_1 = require("discord.js");
 const types_1 = require("./types");
 const config_1 = require("./config/config");
 const MusicPlayer_1 = require("./services/music/MusicPlayer");
+const parseSearchString_1 = require("./utils/parseSearchString");
 const client = new discord_js_1.Client({
     intents: [
         discord_js_1.Intents.FLAGS.GUILDS,
@@ -58,8 +59,8 @@ const handlePlayCommand = (message, url) => __awaiter(void 0, void 0, void 0, fu
         .slice(config_1.ConfigConstants.prefix.length)
         .trim()
         .split(/ +/g);
-    console.log(musicPlayer, "###");
-    yield musicPlayer.playSong(args[1]);
+    console.log(args);
+    yield musicPlayer.playSong(args.slice(1));
 });
 client.on("messageCreate", (message) => __awaiter(void 0, void 0, void 0, function* () {
     if (!message.content.startsWith(prefix) || message.author.bot)
@@ -69,7 +70,7 @@ client.on("messageCreate", (message) => __awaiter(void 0, void 0, void 0, functi
     try {
         switch (command) {
             case types_1.Commands.PLAY:
-                yield handlePlayCommand(message, args[0]);
+                yield handlePlayCommand(message, (0, parseSearchString_1.parseSearchString)(args));
                 break;
             case types_1.Commands.CURRENT:
                 yield musicPlayer.getCurrentTrack();

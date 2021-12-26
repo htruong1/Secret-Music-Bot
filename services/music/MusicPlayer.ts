@@ -55,21 +55,17 @@ export class MusicPlayer implements IMusicPlayer {
           },
         });
       }
-
       if (!this.playerQueue.connection) {
         console.log("connecting");
         await this.playerQueue.connect(voiceChannel);
       }
-      console.log(songQueryParams, "###");
       const { songQuery, requestedBy, searchEngine } =
         this.buildSongQuery(songQueryParams);
-
       const track = await this.getAudioTrack(songQuery, {
         requestedBy,
         searchEngine,
       });
 
-      // console.log(track.id);
       if (!this.playerQueue.track) {
         this.playerQueue.play(track);
       } else {
@@ -90,7 +86,6 @@ export class MusicPlayer implements IMusicPlayer {
     await this.playerQueue.skip();
   }
   private buildSongQuery(songQueryParams: string[]) {
-    console.log(songQueryParams, "###");
     if (songQueryParams.length > 0) {
       return {
         requestedBy: this.message.author,
@@ -98,7 +93,6 @@ export class MusicPlayer implements IMusicPlayer {
         songQuery: songQueryParams.join(" "),
       };
     }
-
     if (songQueryParams[0].includes("youtube.com")) {
       return {
         requestedBy: this.message.author,
@@ -159,6 +153,12 @@ export class MusicPlayer implements IMusicPlayer {
     this.player.on("queueEnd", () => {
       this.playerQueue.destroy(true);
       console.log("player has been destroyed");
+    });
+
+    this.player.on("botDisconnect", () => {
+      console.log("Disconnected");
+      this.playerQueue.destroy();
+      this.playerQueue.connection = null;
     });
   }
 }

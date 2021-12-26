@@ -20,21 +20,50 @@ class MusicPlayer {
             metadata: {
                 channel: message.channel,
             },
+            ytdlOptions: {
+                quality: "highest",
+                filter: "audioonly",
+                highWaterMark: 1 << 25,
+                dlChunkSize: 0,
+            },
         });
         this.initListenerEvents();
     }
-    playSong(songQuery) {
+    playSong(songQueryParams) {
         return __awaiter(this, void 0, void 0, function* () {
             const voiceChannel = this.message.member.voice.channel;
-            if (!this.playerQueue.connection) {
-                yield this.playerQueue.connect(voiceChannel);
+            try {
+                if (this.playerQueue.destroyed) {
+                    this.playerQueue = this.player.createQueue(this.message.guild, {
+                        metadata: {
+                            channel: this.message.channel,
+                        },
+                        ytdlOptions: {
+                            quality: "highest",
+                            filter: "audioonly",
+                            highWaterMark: 1 << 25,
+                            dlChunkSize: 0,
+                        },
+                    });
+                }
+                if (!this.playerQueue.connection) {
+                    console.log("connecting");
+                    yield this.playerQueue.connect(voiceChannel);
+                }
+                const { songQuery, requestedBy, searchEngine } = this.buildSongQuery(songQueryParams);
+                const track = yield this.getAudioTrack(songQuery, {
+                    requestedBy,
+                    searchEngine,
+                });
+                if (!this.playerQueue.track) {
+                    this.playerQueue.play(track);
+                }
+                else {
+                    this.playerQueue.addTrack(track);
+                }
             }
-            const track = yield this.getAudioTrack(songQuery);
-            if (!this.playerQueue.track) {
-                this.playerQueue.play(track);
-            }
-            else {
-                this.playerQueue.addTrack(track);
+            catch (error) {
+                console.log(error);
             }
         });
     }
@@ -48,12 +77,54 @@ class MusicPlayer {
             yield this.playerQueue.skip();
         });
     }
-    getAudioTrack(songQuery) {
+    buildSongQuery(songQueryParams) {
+        if (songQueryParams.length > 0) {
+            return {
+                requestedBy: this.message.author,
+                searchEngine: discord_player_1.QueryType.YOUTUBE_SEARCH,
+                songQuery: songQueryParams.join(" "),
+            };
+        }
+        if (songQueryParams[0].includes("youtube.com")) {
+            return {
+                requestedBy: this.message.author,
+                searchEngine: discord_player_1.QueryType.YOUTUBE_VIDEO,
+                songQuery: songQueryParams[0],
+            };
+        }
+        else if (songQueryParams[0].includes("open.spotify.com/track")) {
+            return {
+                requestedBy: this.message.author,
+                searchEngine: discord_player_1.QueryType.SPOTIFY_SONG,
+                songQuery: songQueryParams[0],
+            };
+        }
+        else if (songQueryParams[0].includes("open.spotify.com/playlist")) {
+            return {
+                requestedBy: this.message.author,
+                searchEngine: discord_player_1.QueryType.SPOTIFY_PLAYLIST,
+                songQuery: songQueryParams[0],
+            };
+        }
+        else if (songQueryParams[0].includes("open.spotify.com/album")) {
+            return {
+                requestedBy: this.message.author,
+                searchEngine: discord_player_1.QueryType.SPOTIFY_PLAYLIST,
+                songQuery: songQueryParams[0],
+            };
+        }
+        else {
+            return {
+                requestedBy: this.message.author,
+                searchEngine: discord_player_1.QueryType.YOUTUBE_SEARCH,
+                songQuery: songQueryParams.join(" "),
+            };
+        }
+    }
+    getAudioTrack(songQuery, searchOptions) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.player
-                .search(songQuery, {
-                requestedBy: this.message.author,
-            })
+                .search(songQuery, searchOptions)
                 .then((searchResults) => searchResults.tracks[0]);
         });
     }
@@ -66,12 +137,18 @@ class MusicPlayer {
             /* tslint:disable-next-line */
             queue.metadata.channel.send(`🎶 | Added **${track.title}** to the music queue!`);
         });
-        this.player.on("error", (error) => {
+        this.player.on("error", (queue, error) => {
             /* tslint:disable-next-line */
-            console.log(error);
+            console.log("###An Error has occured", error);
         });
         this.player.on("queueEnd", () => {
             this.playerQueue.destroy(true);
+            console.log("player has been destroyed");
+        });
+        this.player.on("botDisconnect", () => {
+            console.log("Disconnected");
+            this.playerQueue.destroy();
+            this.playerQueue.connection = null;
         });
     }
 }
