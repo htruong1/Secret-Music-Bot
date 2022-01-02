@@ -1,6 +1,12 @@
 import { Client, Interaction, Message } from "discord.js";
 
-import { Player, SearchOptions, QueryType } from "discord-player";
+import {
+  Player,
+  SearchOptions,
+  QueryType,
+  PlayerError,
+  ErrorStatusCode,
+} from "discord-player";
 
 interface IMusicPlayer {
   playSong: (songQueryParams: string[]) => Promise<void>;
@@ -41,6 +47,14 @@ export class MusicPlayer implements IMusicPlayer {
 
   public async playSong(songQueryParams: string[]) {
     const voiceChannel = this.message.member.voice.channel;
+    if (!voiceChannel) {
+      this.message.channel.send(
+        "You have to be in a voice channel to use the bot."
+      );
+
+      return;
+    }
+
     try {
       if (this.playerQueue.destroyed) {
         this.playerQueue = this.player.createQueue(this.message.guild, {
@@ -92,8 +106,7 @@ export class MusicPlayer implements IMusicPlayer {
         searchEngine: QueryType.YOUTUBE_SEARCH,
         songQuery: songQueryParams.join(" "),
       };
-    }
-    if (songQueryParams[0].includes("youtube.com")) {
+    } else if (songQueryParams[0].includes("youtube.com")) {
       return {
         requestedBy: this.message.author,
         searchEngine: QueryType.YOUTUBE_VIDEO,
@@ -145,9 +158,12 @@ export class MusicPlayer implements IMusicPlayer {
         `🎶 | Added **${track.title}** to the music queue!`
       );
     });
-    this.player.on("error", (queue, error) => {
+    this.player.on("error", (queue, error: PlayerError) => {
       /* tslint:disable-next-line */
       console.log("###An Error has occured", error);
+      if (error.statusCode === ErrorStatusCode.INVALID_ARG_TYPE) {
+        this.message.channel.send("Invalid command or format.");
+      }
     });
 
     this.player.on("queueEnd", () => {
